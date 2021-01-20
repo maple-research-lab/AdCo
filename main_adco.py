@@ -29,5 +29,6 @@ if __name__ == '__main__':
     #use_cuda = torch.cuda.is_available()
     #print("starting check cuda status",use_cuda)
     #if use_cuda:
-    args,params=argparser()
+    parser = argparser()
+    args = parser.parse_args()
     main(args)

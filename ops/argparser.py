@@ -97,7 +97,7 @@ def argparser():
     parser.add_argument("--master_port", type=str, default="1234", help="port for master node")
     parser.add_argument('--node_rank', type=int, default=0, help='rank of machine, 0 to nodes_num-1')
 
-    parser.add_argument('--mem_t', default=0.07, type=float,
+    parser.add_argument('--mem_t', default=0.02, type=float,
                         help='temperature for memory bank(default: 0.07)')
     parser.add_argument('--mem_wd', default=1e-4, type=float,
                         help='weight decay of memory bank (default: 0)')

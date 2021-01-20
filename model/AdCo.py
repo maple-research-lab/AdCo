@@ -107,15 +107,14 @@ class AdCo(nn.Module):
                 # if update_key_encoder:
                 self._momentum_update_key_encoder()  # update the key encoder
 
-                if self.args.sync_bn is None:
-                    # shuffle for making use of BN
-                    im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
+                # shuffle for making use of BN
+                im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
 
                 k = self.encoder_k(im_k)  # keys: NxC
                 k = nn.functional.normalize(k, dim=1)
-                if self.args.sync_bn is None:
-                    # undo shuffle
-                    k = self._batch_unshuffle_ddp(k, idx_unshuffle)
+                
+                # undo shuffle
+                k = self._batch_unshuffle_ddp(k, idx_unshuffle)
                 k = k.detach()
 
 
@@ -147,7 +146,7 @@ class AdCo(nn.Module):
 
             l_pos1 = torch.einsum('nc,ck->nk', [q_pred, k.T])
             l_pos2=torch.einsum('nc,ck->nk', [k_pred, q.T])
-            return q_pred,k_pred,l_pos1,l_pos2
+            return q_pred,k_pred,l_pos1,l_pos2, k
 
 class Adversary_Negatives(nn.Module):
     def __init__(self,bank_size,dim):

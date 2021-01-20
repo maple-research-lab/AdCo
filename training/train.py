@@ -73,9 +73,9 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
     # update network
     # negative logits: NxK
     model.zero_grad()
-    q,k, l_pos1,l_pos2 = model(im_q=images[0], im_k=images[1])
-    d_norm1, d1,l_neg1 = Memory_Bank(q, update_mem=False)
-    d_norm2, d2,l_neg2 = Memory_Bank(k, update_mem=False)
+    q, k, l_pos1, l_pos2, _ = model(im_q=images[0], im_k=images[1])
+    d_norm1, d1, l_neg1 = Memory_Bank(q, update_mem=False)
+    d_norm2, d2, l_neg2 = Memory_Bank(k, update_mem=False)
     # logits: Nx(1+K)
 
     logits1 = torch.cat([l_pos1, l_neg1], dim=1)
@@ -188,9 +188,12 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
         if args.gpu is not None:
             images[0] = images[0].cuda(args.gpu, non_blocking=True)
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
-
+        
         # compute output
-        q, k, l_pos  = model(im_q=images[0], im_k=images[1])
+        if args.sym == 0:
+            q, k, l_pos  = model(im_q=images[0], im_k=images[1])
+        else:
+            q, _, l_pos, _, k  = model(im_q=images[0], im_k=images[1])
         d_norm, d, l_neg = Memory_Bank(q, update_mem=False)
 
         # logits: Nx(1+K)
@@ -207,6 +210,10 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        
+        acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
+        if i % args.print_freq == 0:
+            print(acc1, acc5)
 
         # fill the memory bank
         output = k
@@ -214,7 +221,7 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
         start_point = i * batch_size
         end_point = min((i + 1) * batch_size, args.cluster)
         Memory_Bank.W.data[:, start_point:end_point] = output[:end_point - start_point].T
-        if i * batch_size > args.cluster:
+        if (i+1) * batch_size >= args.cluster:
             break
 
 @torch.no_grad()
