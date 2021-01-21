@@ -27,7 +27,9 @@ def update_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,crit
     # update network
     # negative logits: NxK
 
-    q, _, l_pos = model(im_q=images[0], im_k=images[1])
+    q, k = model(im_q=images[0], im_k=images[1])
+    k = concat_all_gather(k)
+    l_pos = torch.einsum('nc,ck->nk', [q, k.T])
 
     d_norm, d, l_neg = Memory_Bank(q, update_mem=False)
 
@@ -73,9 +75,14 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
     # update network
     # negative logits: NxK
     model.zero_grad()
-    q, k, l_pos1, l_pos2, _ = model(im_q=images[0], im_k=images[1])
-    d_norm1, d1, l_neg1 = Memory_Bank(q, update_mem=False)
-    d_norm2, d2, l_neg2 = Memory_Bank(k, update_mem=False)
+    q_pred, k_pred, q, k = model(im_q=images[0], im_k=images[1])
+    q = concat_all_gather(q)
+    k = concat_all_gather(k)
+    l_pos1 = torch.einsum('nc,ck->nk', [q_pred, k.T])
+    l_pos2=torch.einsum('nc,ck->nk', [k_pred, q.T])
+    
+    d_norm1, d1, l_neg1 = Memory_Bank(q_pred, update_mem=False)
+    d_norm2, d2, l_neg2 = Memory_Bank(k_pred, update_mem=False)
     # logits: Nx(1+K)
 
     logits1 = torch.cat([l_pos1, l_neg1], dim=1)
@@ -121,12 +128,12 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
         logits2 /= args.mem_t
         total_bsize = logits1.shape[1] - args.cluster
         p_qd1 = nn.functional.softmax(logits1, dim=1)[:, total_bsize:]
-        g1 = torch.einsum('cn,nk->ck', [q.T, p_qd1]) / logits1.shape[0] - torch.mul(
+        g1 = torch.einsum('cn,nk->ck', [q_pred.T, p_qd1]) / logits1.shape[0] - torch.mul(
             torch.mean(torch.mul(p_qd1, l_neg1), dim=0), d_norm1)
         p_qd2 = nn.functional.softmax(logits2, dim=1)[:, total_bsize:]
-        g2 = torch.einsum('cn,nk->ck', [k.T, p_qd2]) / logits2.shape[0] - torch.mul(
+        g2 = torch.einsum('cn,nk->ck', [k_pred.T, p_qd2]) / logits2.shape[0] - torch.mul(
             torch.mean(torch.mul(p_qd2, l_neg2), dim=0), d_norm1)
-        g = -torch.div(g1, torch.norm(d1, dim=0)) / args.mem_t - torch.div(g2,
+        g = -0.5*torch.div(g1, torch.norm(d1, dim=0)) / args.mem_t - 0.5*torch.div(g2,
                                                                            torch.norm(d1, dim=0)) / args.mem_t  # c*k
         g = all_reduce(g) / torch.distributed.get_world_size()
         Memory_Bank.v.data = args.momentum * Memory_Bank.v.data + g + args.mem_wd * Memory_Bank.W.data
@@ -181,6 +188,14 @@ def train(train_loader, model,Memory_Bank, criterion,
 
 def init_memory(train_loader, model,Memory_Bank, criterion,
                                 optimizer,epoch, args):
+    
+    losses = AverageMeter('Loss', ':.4e')
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    top5 = AverageMeter('Acc@5', ':6.2f')
+    progress = ProgressMeter(
+        len(train_loader),
+        [losses, top1, top5],
+        prefix="Epoch: [{}]".format(epoch))
     # switch to train mode
     model.train()
     for i, (images, _) in enumerate(train_loader):
@@ -190,21 +205,18 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
             images[1] = images[1].cuda(args.gpu, non_blocking=True)
         
         # compute output
-        if args.sym == 0:
-            q, k, l_pos  = model(im_q=images[0], im_k=images[1])
+        if not args.sym:
+            q, k  = model(im_q=images[0], im_k=images[1])
         else:
-            q, _, l_pos, _, k  = model(im_q=images[0], im_k=images[1])
+            q, _, _, k  = model(im_q=images[0], im_k=images[1])
         d_norm, d, l_neg = Memory_Bank(q, update_mem=False)
 
+        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
         # logits: Nx(1+K)
 
         logits = torch.cat([l_pos, l_neg], dim=1)
         logits /= args.moco_t
-
-        cur_batch_size = logits.shape[0]
-        cur_gpu = args.gpu
-        choose_match = cur_gpu * cur_batch_size
-        labels = torch.arange(choose_match, choose_match + cur_batch_size, dtype=torch.long).cuda()
+        labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
         loss = criterion(logits, labels)
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -212,17 +224,24 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
         optimizer.step()
         
         acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
+        
+        losses.update(loss.item(), images[0].size(0))
+        top1.update(acc1[0], images[0].size(0))
+        top5.update(acc5[0], images[0].size(0))
         if i % args.print_freq == 0:
-            print(acc1, acc5)
+            progress.display(i)
 
         # fill the memory bank
-        output = k
+        output = concat_all_gather(k)
         batch_size = output.size(0)
         start_point = i * batch_size
         end_point = min((i + 1) * batch_size, args.cluster)
         Memory_Bank.W.data[:, start_point:end_point] = output[:end_point - start_point].T
         if (i+1) * batch_size >= args.cluster:
             break
+    for param_q, param_k in zip(model.module.encoder_q.parameters(),
+                                model.module.encoder_k.parameters()):
+        param_k.data.copy_(param_q.data)  # initialize
 
 @torch.no_grad()
 def all_reduce(tensor):

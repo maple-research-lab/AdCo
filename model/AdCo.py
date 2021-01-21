@@ -117,10 +117,7 @@ class AdCo(nn.Module):
                 k = self._batch_unshuffle_ddp(k, idx_unshuffle)
                 k = k.detach()
 
-
-            k = concat_all_gather(k)
-            l_pos = torch.einsum('nc,ck->nk', [q, k.T])
-            return q, k, l_pos
+            return q, k
         else:
             q_pred=q
             k_pred = self.encoder_q(im_k)  # queries: NxC
@@ -141,12 +138,8 @@ class AdCo(nn.Module):
                 k = nn.functional.normalize(k, dim=1)
                 k = self._batch_unshuffle_ddp(k, idx_unshuffle)
                 k = k.detach()
-            q = concat_all_gather(q)
-            k = concat_all_gather(k)
-
-            l_pos1 = torch.einsum('nc,ck->nk', [q_pred, k.T])
-            l_pos2=torch.einsum('nc,ck->nk', [k_pred, q.T])
-            return q_pred,k_pred,l_pos1,l_pos2, k
+                
+            return q_pred,k_pred,q, k
 
 class Adversary_Negatives(nn.Module):
     def __init__(self,bank_size,dim):

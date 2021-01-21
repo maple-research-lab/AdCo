@@ -76,8 +76,6 @@ def argparser():
                         help='use cosine lr schedule')
     parser.add_argument('--dataset', type=str, default="ImageNet", help="Specify dataset: ImageNet or cifar10")
     parser.add_argument('--choose', type=str, default=None, help="choose gpu for training")
-    parser.add_argument("--train_url", default="", type=str, help="Cloud path that specifies the output file path")
-    parser.add_argument('--data_url', default="", type=str, help="Cloud path that specifies the datasets")
     parser.add_argument('--save_path', default=".", type=str, help="model and record save path")
     # idea from swav#adds crops for it
     parser.add_argument("--nmb_crops", type=int, default=[1, 1, 1, 1, 1], nargs="+",

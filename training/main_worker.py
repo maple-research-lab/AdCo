@@ -24,19 +24,24 @@ def init_log_path(args):
     save model+log path
     """
     save_path = os.path.join(os.getcwd(), args.log_path)
-    mkdir(save_path)
+    if args.gpu == 0:
+        mkdir(save_path)
     save_path = os.path.join(save_path, args.dataset)
-    mkdir(save_path)
+    if args.gpu == 0:
+        mkdir(save_path)
     save_path = os.path.join(save_path, "lr_" + str(args.lr) + "_memlr" + str(args.memory_lr))
-    mkdir(save_path)
+    if args.gpu == 0:
+        mkdir(save_path)
     save_path = os.path.join(save_path, "cos_" + str(args.cos))
-    mkdir(save_path)
+    if args.gpu == 0:
+        mkdir(save_path)
     import datetime
     today = datetime.date.today()
     formatted_today = today.strftime('%y%m%d')
     now = time.strftime("%H:%M:%S")
     save_path = os.path.join(save_path, formatted_today + now)
-    mkdir(save_path)
+    if args.gpu == 0:
+        mkdir(save_path)
     return save_path
 
 def main_worker(gpu, ngpus_per_node, args):
@@ -67,7 +72,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     model = AdCo(models.__dict__[args.arch], args,
                            args.moco_dim, args.moco_m, args.moco_t, args.mlp)
-    print(model)
+#     print(model)
 
 
     if args.distributed:
