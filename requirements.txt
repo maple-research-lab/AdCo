@@ -1,0 +1,7 @@
+torch==1.7.1
+torchvision==0.8.2
+numpy==1.19.5
+Pillow==5.1.0
+tensorboard==1.14.0
+tensorboardX==1.7
+
