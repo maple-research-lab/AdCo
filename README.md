@@ -73,5 +73,172 @@ conda activate AdCo
 conda deactivate(If you want to exit) 
 ```
 
+## Usage
+```
+python3 main_adco.py -h
+  --log_path LOG_PATH   log path for saving models
+  -a ARCH, --arch ARCH  model architecture: alexnet | densenet121 |
+                        densenet161 | densenet169 | densenet201 | googlenet |
+                        inception_v3 | mnasnet0_5 | mnasnet0_75 | mnasnet1_0 |
+                        mnasnet1_3 | mobilenet_v2 | resnet101 | resnet152 |
+                        resnet18 | resnet34 | resnet50 | resnext101_32x8d |
+                        resnext50_32x4d | shufflenet_v2_x0_5 |
+                        shufflenet_v2_x1_0 | shufflenet_v2_x1_5 |
+                        shufflenet_v2_x2_0 | squeezenet1_0 | squeezenet1_1 |
+                        vgg11 | vgg11_bn | vgg13 | vgg13_bn | vgg16 | vgg16_bn
+                        | vgg19 | vgg19_bn | wide_resnet101_2 |
+                        wide_resnet50_2 (default: resnet50)
+  -j N, --workers N     number of data loading workers (default: 32)
+  --epochs N            number of total epochs to run
+  --start_epoch N       manual epoch number (useful on restarts)
+  -b N, --batch_size N  mini-batch size (default: 256), this is the total
+                        batch size of all GPUs on the current node when using
+                        Data Parallel or Distributed Data Parallel
+  --lr LR, --learning_rate LR
+                        initial learning rate
+  --lr_final LR_FINAL   final learning rate
+  --schedule [SCHEDULE [SCHEDULE ...]]
+                        learning rate schedule: default: cos scheduler
+  --momentum M          momentum of SGD solver
+  --wd W, --weight_decay W
+                        weight decay (default: 1e-4)
+  -p N, --print_freq N  print frequency (default: 10)
+  --resume PATH         path to latest checkpoint (default: none)
+  --world_size WORLD_SIZE
+                        number of nodes for distributed
+                        training,args.nodes_num*args.ngpu,here we specify with
+                        the number of nodes
+  --rank RANK           node rank for distributed training,rank of total
+                        threads, 0 to args.world_size-1
+  --dist_url DIST_URL   url used to set up distributed training
+  --dist_backend DIST_BACKEND
+                        distributed backend
+  --seed SEED           seed for initializing training.
+  --gpu GPU             GPU id to use.
+  --multiprocessing_distributed MULTIPROCESSING_DISTRIBUTED
+                        Use multi-processing distributed training to launch N
+                        processes per node, which has N GPUs. This is the
+                        fastest way to use PyTorch for either single node or
+                        multi node data parallel training
+  --moco_dim MOCO_DIM   feature dimension (default: 128)
+  --moco_m MOCO_M       moco momentum of updating key encoder (default: 0.999)
+  --moco_t MOCO_T       softmax temperature for network (default: 0.12)
+  --mlp MLP             use mlp head
+  --cos COS             use cosine lr schedule
+  --dataset DATASET     Specify dataset: ImageNet or cifar10
+  --choose CHOOSE       choose gpu for training
+  --save_path SAVE_PATH
+                        model and record save path
+  --nmb_crops NMB_CROPS [NMB_CROPS ...]
+                        list of number of crops (example: [2, 6])
+  --size_crops SIZE_CROPS [SIZE_CROPS ...]
+                        crops resolutions (example: [224, 96])
+  --min_scale_crops MIN_SCALE_CROPS [MIN_SCALE_CROPS ...]
+                        argument in RandomResizedCrop (example: [0.14, 0.05])
+  --max_scale_crops MAX_SCALE_CROPS [MAX_SCALE_CROPS ...]
+                        argument in RandomResizedCrop (example: [1., 0.14])
+  --cluster CLUSTER     number of learnable comparison features
+  --memory_lr MEMORY_LR
+                        learning rate for adversial memory bank
+  --ad_init AD_INIT     use feature encoding to init or not
+  --nodes_num NODES_NUM
+                        number of nodes to use
+  --ngpu NGPU           number of gpus per node
+  --master_addr MASTER_ADDR
+                        addr for master node
+  --master_port MASTER_PORT
+                        port for master node
+  --node_rank NODE_RANK
+                        rank of machine, 0 to nodes_num-1
+  --mem_t MEM_T         temperature for memory bank(default: 0.02)
+  --mem_wd MEM_WD       weight decay of memory bank (default: 0)
+  --sym SYM             train with symmetric loss or not
+
+```
+
+### Unsupervised Training
+This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported.
+#### Single Crop
+##### 1 Without symmetrical loss:
+```
+
+```
+#### 2 With symmetrical loss:
+```
+
+```
+#### Multi Crop
+##### 1 Without symmetrical loss:
+```
+
+```
+#### 2 With symmetrical loss:
+```
+
+```
+
+### Linear Classification
+With a pre-trained model, we can easily evaluate its performance on ImageNet with:
+```
+
+```
+Performance:
+<table><tbody>
+<!-- START TABLE -->
+<!-- TABLE HEADER -->
+<th valign="bottom">pre-train<br/>network</th>
+<th valign="bottom">pre-train<br/>epochs</th>
+<th valign="bottom">Crop</th>
+<th valign="bottom">Symmetrical<br/>Loss</th>
+<th valign="bottom">AdCo<br/>top-1 acc.</th>
+<!-- TABLE BODY -->
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">Single</td>
+<td align="center">No</td>
+<td align="center">68.6</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">Multi</td>
+<td align="center">No</td>
+<td align="center">73.2</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">800</td>
+<td align="center">Single</td>
+<td align="center">No</td>
+<td align="center">72.8</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">800</td>
+<td align="center">Multi</td>
+<td align="center">No</td>
+<td align="center">75.7</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">Single</td>
+<td align="center">Yes</td>
+<td align="center">70.6</td>
+</tr>
+</tbody></table>
+
+### Transfering to VOC07 Classification
+#### 1 Downloading [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar).
+#### 2 Linear Evaluation:
+```
+
+```
+
+### Transfering to Places205 Classification
+#### 1 Downloading [Dataset](http://places.csail.mit.edu/user/index.php)
+#### 2 Linear Evaluation:
+```
+
+```
+
+### Transferring to Object Detection
+Please refer to [MoCo Detection](https://github.com/facebookresearch/moco/blob/master/detection), we adopted the same protocol for detection.
 
 
