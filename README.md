@@ -163,7 +163,7 @@ This implementation only supports multi-gpu, DistributedDataParallel training, w
 ```
 
 ```
-#### 2 With symmetrical loss:
+##### 2 With symmetrical loss:
 ```
 
 ```
@@ -172,7 +172,7 @@ This implementation only supports multi-gpu, DistributedDataParallel training, w
 ```
 
 ```
-#### 2 With symmetrical loss:
+##### 2 With symmetrical loss:
 ```
 
 ```
