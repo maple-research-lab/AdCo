@@ -161,26 +161,26 @@ This implementation only supports multi-gpu, DistributedDataParallel training, w
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
-
+python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=0
 ```
 ##### 2 With symmetrical loss:
 ```
-
+python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1
 ```
 #### Multi Crop
 ##### 1 Without symmetrical loss:
 ```
-
+python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=0 --multi_crop=1
 ```
 ##### 2 With symmetrical loss:
 ```
-
+python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1 --multi_crop=1
 ```
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:
 ```
-
+python3 classification/lincls.py --train_strong=0 --epochs=100 --data=path/to/imagenet2012 -a=resnet50 --lr=10 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=path/to/pretrained/model
 ```
 Performance:
 <table><tbody>
@@ -228,14 +228,15 @@ Performance:
 #### 1 Downloading [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar).
 #### 2 Linear Evaluation:
 ```
-
+# in VOC_CLF folder
+python3 main.py --data=path/to/voc07 --pretrained=path/to/pretrained/model
 ```
 
 ### Transfering to Places205 Classification
 #### 1 Downloading [Dataset](http://places.csail.mit.edu/user/index.php)
 #### 2 Linear Evaluation:
 ```
-
+python3 classification/lincls.py --train_strong=0 --sgdr=1 --epochs=100 --data=path/to/places205 -a=resnet50 --lr=5 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=path/to/pretrained/model
 ```
 
 ### Transferring to Object Detection
