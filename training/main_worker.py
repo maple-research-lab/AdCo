@@ -68,7 +68,8 @@ def main_worker(gpu, ngpus_per_node, args):
                                 world_size=args.world_size, rank=args.rank)
     # create model
     print("=> creating model '{}'".format(args.arch))
-    Memory_Bank = Adversary_Negatives(args.cluster,args.moco_dim)
+    multi_crop = args.multi_crop
+    Memory_Bank = Adversary_Negatives(args.cluster,args.moco_dim, multi_crop)
 
     model = AdCo(models.__dict__[args.arch], args,
                            args.moco_dim, args.moco_m, args.moco_t, args.mlp)
