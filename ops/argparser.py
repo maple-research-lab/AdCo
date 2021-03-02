@@ -100,5 +100,6 @@ def argparser():
     parser.add_argument('--mem_wd', default=1e-4, type=float,
                         help='weight decay of memory bank (default: 0)')
     parser.add_argument("--sym", type=int, default=0, help="train with symmetric loss or not")
+    parser.add_argument("--multi_crop", type=int, default=0, help="train with multi crop")
 
     return parser

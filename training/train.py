@@ -146,6 +146,62 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
         mem_losses.update(batch_prob.item(), logits1.size(0))
     return l_neg1,logits1
 
+def update_network_multi(model,images,args,Memory_Bank,losses,top1,top5,optimizer,criterion,mem_losses):
+    # update network
+    # negative logits: NxK
+    image_size = len(images)
+    q_list, k = model(im_q=images[1:image_size], im_k=images[0])
+    k = concat_all_gather(k)
+    k = concat_all_gather(k)
+    l_pos_list = []
+    for q in q_list:
+        # l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
+        l_pos = torch.einsum('nc,ck->nk', [q, k.T])
+        l_pos_list.append(l_pos)
+
+    d_norm, d, l_neg_list = Memory_Bank(q_list, update_mem=False)
+
+    loss = 0
+    cur_batch_size = l_pos_list[0].shape[0]
+    cur_gpu = args.gpu
+    choose_match = cur_gpu * cur_batch_size
+    labels = torch.arange(choose_match, choose_match + cur_batch_size, dtype=torch.long).cuda()
+    for k in range(len(l_pos_list)):
+        logits = torch.cat([l_pos_list[k], l_neg_list[k]], dim=1)
+        logits /= args.moco_t
+        loss += criterion(logits, labels)
+        if k == 0:
+            # acc1/acc5 are (K+1)-way contrast classifier accuracy
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
+            losses.update(loss.item(), images[0].size(0))
+            top1.update(acc1[0], images[0].size(0))
+            top5.update(acc5[0], images[0].size(0))
+    # compute gradient and do SGD step
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    # update memory bank
+    g_sum = 0
+    with torch.no_grad():
+        for k in range(len(l_pos_list)):
+            logits = torch.cat([l_pos_list[k], l_neg_list[k]], dim=1) / args.mem_t
+            total_bsize = logits.shape[1] - args.cluster
+            p_qd = nn.functional.softmax(logits, dim=1)[:, total_bsize:]  # n*k
+            g = torch.einsum('cn,nk->ck', [q_list[k].T, p_qd]) / logits.shape[0] - torch.mul(
+                torch.mean(torch.mul(p_qd, l_neg_list[k]), dim=0),
+                d_norm)
+            g_sum += -torch.div(g, torch.norm(d, dim=0)) / args.mem_t  # c*k
+            if k == 0:
+                logits = torch.softmax(logits, dim=1)
+                batch_prob = torch.sum(logits[:, :logits.size(0)], dim=1)
+                batch_prob = torch.mean(batch_prob)
+                mem_losses.update(batch_prob.item(), logits.size(0))
+        g_sum = all_reduce(g_sum) / torch.distributed.get_world_size()
+        Memory_Bank.v.data = args.momentum * Memory_Bank.v.data + g_sum + args.mem_wd * Memory_Bank.W.data
+        Memory_Bank.W.data = Memory_Bank.W.data - args.memory_lr * Memory_Bank.v.data
+
+
 def train(train_loader, model,Memory_Bank, criterion,
                                 optimizer,epoch, args):
 
@@ -169,14 +225,15 @@ def train(train_loader, model,Memory_Bank, criterion,
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            for k in range(len(images)):
+                images[k] = images[k].cuda(args.gpu, non_blocking=True)
         batch_size=images[0].size(0)
-        if not args.sym:
+        if args.multi_crop:
+            update_network_multi(model, images, args, Memory_Bank, losses, top1, top5, optimizer, criterion,mem_losses)
+        elif not args.sym:
             update_network(model, images, args, Memory_Bank, losses, top1, top5, optimizer, criterion,mem_losses)
         else:
-            update_sym_network(model, images, args, Memory_Bank, losses, top1, top5,
-                                               optimizer, criterion, mem_losses)
+            update_sym_network(model, images, args, Memory_Bank, losses, top1, top5, optimizer, criterion, mem_losses)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -201,11 +258,14 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
     for i, (images, _) in enumerate(train_loader):
         # measure data loading time
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            for k in range(len(images)):
+                images[k] = images[k].cuda(args.gpu, non_blocking=True)
         
         # compute output
-        if not args.sym:
+        if args.multi_crop:
+            q_list, k = model(im_q=images[0:-1], im_k=images[-1])
+            q = q_list[0]
+        elif not args.sym:
             q, k  = model(im_q=images[0], im_k=images[1])
         else:
             q, _, _, k  = model(im_q=images[0], im_k=images[1])

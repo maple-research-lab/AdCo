@@ -139,27 +139,33 @@ def main_worker(gpu, ngpus_per_node, args):
         traindir = os.path.join(args.data, 'train')
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-        augmentation = [
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-            transforms.RandomApply([
-                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            ], p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ]
+        if args.multi_crop:
+            from data_processing.MultiCrop_Transform import Multi_Transform
+            multi_transform = Multi_Transform(args.size_crops,
+                                              args.nmb_crops,
+                                              args.min_scale_crops,
+                                              args.max_scale_crops, normalize)
+            train_dataset = datasets.ImageFolder(
+                traindir, multi_transform)
+        else:
+            augmentation = [
+                transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+                transforms.RandomApply([
+                    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
+                ], p=0.8),
+                transforms.RandomGrayscale(p=0.2),
+                transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize
+            ]
+            train_dataset = datasets.ImageFolder(
+                traindir,
+                TwoCropsTransform(transforms.Compose(augmentation)))
 
     else:
-        print("We only support CIFAR10 and ImageNet dataset currently")
+        print("We only support ImageNet dataset currently")
         exit()
-
-
-    if args.dataset=='ImageNet':
-        train_dataset = datasets.ImageFolder(
-            traindir,
-            TwoCropsTransform(transforms.Compose(augmentation)))
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)

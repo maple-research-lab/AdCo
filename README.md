@@ -168,14 +168,19 @@ python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 -
 python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1
 ```
 #### Multi Crop
-##### 1 Without symmetrical loss:
+
+[comment]: <> (##### 1 Without symmetrical loss:)
 ```
-python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=0 --multi_crop=1
+python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --multi_crop=1
 ```
-##### 2 With symmetrical loss:
-```
-python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1 --multi_crop=1
-```
+
+[comment]: <> (##### 2 With symmetrical loss:)
+
+[comment]: <> (```)
+
+[comment]: <> (python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=path/to/imagenet2012 --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --cutout=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1 --multi_crop=1)
+
+[comment]: <> (```)
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:

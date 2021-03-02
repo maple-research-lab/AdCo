@@ -21,6 +21,7 @@ class AdCo(nn.Module):
         self.T = T
         self.T_m = args.mem_t
         self.sym = args.sym
+        self.multi_crop = args.multi_crop
         # create the encoders
         # num_classes is the output fc dimension
         self.encoder_q = base_encoder(num_classes=dim)
@@ -99,9 +100,31 @@ class AdCo(nn.Module):
         Output:
             logits, targets
         """
-        q = self.encoder_q(im_q)  # queries: NxC
-        q = nn.functional.normalize(q, dim=1)
-        if not self.sym:
+        if self.multi_crop:
+            q_list = []
+            for k, im_q in enumerate(im_q):  # weak forward
+                q = self.encoder_q(im_q)  # queries: NxC
+                q = nn.functional.normalize(q, dim=1)
+                # q = self._batch_unshuffle_ddp(q, idx_unshuffle)
+                q_list.append(q)
+
+            # compute key features
+            with torch.no_grad():  # no gradient to keys
+                # if update_key_encoder:
+                self._momentum_update_key_encoder()  # update the key encoder
+
+                # shuffle for making use of BN
+                im_k, idx_unshuffle = self._batch_shuffle_ddp(im_k)
+
+                k = self.encoder_k(im_k)  # keys: NxC
+                k = nn.functional.normalize(k, dim=1)
+                # undo shuffle
+                k = self._batch_unshuffle_ddp(k, idx_unshuffle)
+                k = k.detach()
+            return q_list, k
+        elif not self.sym:
+            q = self.encoder_q(im_q)  # queries: NxC
+            q = nn.functional.normalize(q, dim=1)
             # compute key features
             with torch.no_grad():  # no gradient to keys
                 # if update_key_encoder:
@@ -119,6 +142,8 @@ class AdCo(nn.Module):
 
             return q, k
         else:
+            q = self.encoder_q(im_q)  # queries: NxC
+            q = nn.functional.normalize(q, dim=1)
             q_pred=q
             k_pred = self.encoder_q(im_k)  # queries: NxC
             k_pred = nn.functional.normalize(k_pred, dim=1)
@@ -142,15 +167,23 @@ class AdCo(nn.Module):
             return q_pred,k_pred,q, k
 
 class Adversary_Negatives(nn.Module):
-    def __init__(self,bank_size,dim):
+    def __init__(self,bank_size,dim,multi_crop=0):
         super(Adversary_Negatives, self).__init__()
+        self.multi_crop = multi_crop
         self.register_buffer("W", torch.randn(dim, bank_size))
         self.register_buffer("v", torch.zeros(dim, bank_size))
     def forward(self,q, update_mem=True):
         memory_bank = self.W
         memory_bank = nn.functional.normalize(memory_bank, dim=0)
-        logit=torch.einsum('nc,ck->nk', [q, memory_bank])
-        return memory_bank, self.W, logit
+        if self.multi_crop:
+            logit_list = []
+            for q_item in q:
+                logit = torch.einsum('nc,ck->nk', [q_item, memory_bank])
+                logit_list.append(logit)
+            return memory_bank, self.W, logit_list
+        else:
+            logit=torch.einsum('nc,ck->nk', [q, memory_bank])
+            return memory_bank, self.W, logit
     def update(self, m, lr, weight_decay, g):
         g = g + weight_decay * self.W
         self.v = m * self.v + g
