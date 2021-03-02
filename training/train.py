@@ -31,7 +31,7 @@ def update_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,crit
     k = concat_all_gather(k)
     l_pos = torch.einsum('nc,ck->nk', [q, k.T])
 
-    d_norm, d, l_neg = Memory_Bank(q, update_mem=False)
+    d_norm, d, l_neg = Memory_Bank(q)
 
     # logits: Nx(1+K)
 
@@ -81,8 +81,8 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
     l_pos1 = torch.einsum('nc,ck->nk', [q_pred, k.T])
     l_pos2=torch.einsum('nc,ck->nk', [k_pred, q.T])
     
-    d_norm1, d1, l_neg1 = Memory_Bank(q_pred, update_mem=False)
-    d_norm2, d2, l_neg2 = Memory_Bank(k_pred, update_mem=False)
+    d_norm1, d1, l_neg1 = Memory_Bank(q_pred)
+    d_norm2, d2, l_neg2 = Memory_Bank(k_pred)
     # logits: Nx(1+K)
 
     logits1 = torch.cat([l_pos1, l_neg1], dim=1)
@@ -159,7 +159,7 @@ def update_network_multi(model,images,args,Memory_Bank,losses,top1,top5,optimize
         l_pos = torch.einsum('nc,ck->nk', [q, k.T])
         l_pos_list.append(l_pos)
 
-    d_norm, d, l_neg_list = Memory_Bank(q_list, update_mem=False)
+    d_norm, d, l_neg_list = Memory_Bank(q_list)
 
     loss = 0
     cur_batch_size = l_pos_list[0].shape[0]
@@ -269,7 +269,7 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
             q, k  = model(im_q=images[0], im_k=images[1])
         else:
             q, _, _, k  = model(im_q=images[0], im_k=images[1])
-        d_norm, d, l_neg = Memory_Bank(q, update_mem=False)
+        d_norm, d, l_neg = Memory_Bank(q, init_mem=True)
 
         l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
         # logits: Nx(1+K)

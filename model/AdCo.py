@@ -172,10 +172,10 @@ class Adversary_Negatives(nn.Module):
         self.multi_crop = multi_crop
         self.register_buffer("W", torch.randn(dim, bank_size))
         self.register_buffer("v", torch.zeros(dim, bank_size))
-    def forward(self,q, update_mem=True):
+    def forward(self,q, init_mem=False):
         memory_bank = self.W
         memory_bank = nn.functional.normalize(memory_bank, dim=0)
-        if self.multi_crop:
+        if self.multi_crop and not init_mem:
             logit_list = []
             for q_item in q:
                 logit = torch.einsum('nc,ck->nk', [q_item, memory_bank])
