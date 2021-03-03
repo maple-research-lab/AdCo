@@ -152,7 +152,6 @@ def update_network_multi(model,images,args,Memory_Bank,losses,top1,top5,optimize
     image_size = len(images)
     q_list, k = model(im_q=images[1:image_size], im_k=images[0])
     k = concat_all_gather(k)
-    k = concat_all_gather(k)
     l_pos_list = []
     for q in q_list:
         # l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
