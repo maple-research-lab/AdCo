@@ -58,12 +58,15 @@ Each time when you want to run my code, simply activate the environment by
 conda activate AdCo
 conda deactivate(If you want to exit) 
 ```
-
+#### 4 Prepare the ImageNet dataset
+##### 4.1 Download the [ImageNet2012 Dataset](http://image-net.org/challenges/LSVRC/2012/) under "./datasets/imagenet2012".
+##### 4.2 Go to path "./datasets/imagenet2012/val"
+##### 4.3 move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 
 ## Usage
 
 ### Unsupervised Training
-This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset](http://image-net.org/challenges/LSVRC/2012/) under "./datasets/imagenet2012".
+This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported.
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
