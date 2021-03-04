@@ -3,12 +3,15 @@
 #Contact: Xiao Wang (wang3702@purdue.edu, xiaowang20140001@gmail.com)
 
 #Some codes adopted from https://github.com/facebookresearch/moco
-
+import os
 from ops.argparser import  argparser
 from ops.Config_Environment import Config_Environment
 import torch.multiprocessing as mp
 from training.main_worker import main_worker
 def main(args):
+    if args.choose is not None:
+        os.environ['CUDA_VISIBLE_DEVICES'] = args.choose
+        print("Current we choose gpu:%s" % args.choose)
     #config environment
     ngpus_per_node=Config_Environment(args)
 

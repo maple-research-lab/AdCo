@@ -27,6 +27,7 @@ import torchvision.models as models
 # from Data_Processing.VOC_utils import get_ap_score
 from data_processing.loader import GaussianBlur
 from ops.os_operation import mkdir
+from training.train_utils import accuracy
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -103,9 +104,6 @@ parser.add_argument("--add_crop", type=int, default=0, help="use crop or not in 
 parser.add_argument("--strong", type=int, default=0, help="use strong augmentation or not")
 parser.add_argument("--final_lr", type=float, default=0.01, help="ending learning rate for training")
 parser.add_argument("--aug_type", type=int, default=0, help="augmentation type for our condition")
-parser.add_argument("--cloud", type=int, default=0, help="use cloud or not")
-parser.add_argument("--train_url", default="", type=str, help="Cloud path that specifies the output file path")
-parser.add_argument('--data_url', default="", type=str, help="Cloud path that specifies the datasets")
 parser.add_argument('--save_path', default="", type=str, help="model and record save path")
 parser.add_argument('--log_path', type=str, default="train_log", help="log path for saving models")
 parser.add_argument("--nodes_num", type=int, default=1, help="number of nodes to use")
@@ -113,7 +111,6 @@ parser.add_argument("--ngpu", type=int, default=8, help="number of gpus per node
 parser.add_argument("--master_addr", type=str, default="127.0.0.1", help="addr for master node")
 parser.add_argument("--master_port", type=str, default="1234", help="port for master node")
 parser.add_argument('--node_rank', type=int, default=0, help='rank of machine, 0 to nodes_num-1')
-parser.add_argument("--init_method", default="", type=str, help="Cloud default method init")
 parser.add_argument("--final", default=0, type=int, help="use the final specified augment or not")
 parser.add_argument("--avg_pool", default=1, type=int, help="average pool output size")
 parser.add_argument("--crop_scale", type=float, default=[0.2, 1.0], nargs="+",
@@ -151,44 +148,8 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
     params = vars(args)
-    if args.cloud == 1:
-        data_path = "/cache/" + args.data
-    else:
-        data_path = args.data  # the path stored
+    data_path = args.data  # the path stored
     args.data = data_path
-    if args.cloud:
-        import moxing as mox
-        start_path = os.path.join(params['data_url'], args.pretrained)
-        move_to_path = os.path.join(data_path, args.pretrained)
-        mkdir(data_path)
-        mox.file.copy(start_path, move_to_path)
-        args.pretrained = move_to_path
-    if args.cloud:
-        import moxing as mox
-        if args.nodes_num > 1:  # if use multi-nodes ddp
-            master_host = os.environ['BATCH_WORKER_HOSTS'].split(',')[0]
-            args.master_addr = master_host.split(':')[0]
-            args.master_port = master_host.split(':')[1]
-            # FLAGS.worldsize will be re-computed follow as FLAGS.ngpu*FLAGS.nodes_num
-            # FLAGS.rank will be re-computed in main_worker
-            modelarts_rank = args.rank  # ModelArts receive FLAGS.rank means node_rank
-            modelarts_world_size = args.world_size  # ModelArts receive FLAGS.worldsize means nodes_num
-            args.nodes_num = modelarts_world_size
-            args.node_rank = modelarts_rank
-            print("node rank %d, nodes_num %d" % (args.node_rank, args.nodes_num))
-            args.ngpu = torch.cuda.device_count()
-            args.world_size = args.ngpu * args.nodes_num
-            os.environ['MASTER_ADDR'] = args.master_addr
-            os.environ['MASTER_PORT'] = args.master_port
-
-        print('S3 train url: ', params['train_url'])  # print content can be seen in log of modelarts
-        print('S3 data_url: ', params['data_url'])
-
-        mox.file.copy_parallel(params['data_url'], data_path)
-        print('CACHE FILES: ', mox.file.list_directory(data_path))
-        # assert params['save_path']!=""
-        args.save_path = '/cache/' + params['save_path']
-        mkdir(params['save_path'])
     ngpus_per_node = torch.cuda.device_count()
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
@@ -616,10 +577,7 @@ def main_worker(gpu, ngpus_per_node, args):
     formatted_today = today.strftime('%y%m%d')
     now = time.strftime("%H:%M:%S")
 
-    if args.cloud:
-        save_path = os.path.join(args.save_path, args.log_path)
-    else:
-        save_path = os.path.join(args.save_path, args.log_path)
+    save_path = os.path.join(args.save_path, args.log_path)
     log_path = os.path.join(save_path, 'Finetune_log')
     mkdir(log_path)
     log_path = os.path.join(log_path, formatted_today + now)
@@ -667,13 +625,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
             if epoch == args.start_epoch and not args.use_swav:
                 sanity_check(model.state_dict(), args.pretrained)
-            if params['cloud'] and is_best:
-                # copy the log file and saved model file to the path
-                # mox.file.copy_parallel(log_path, params['train_url'])
-                import moxing as mox
-                # if is_best:
-                model_local_path = os.path.join(params['train_url'], 'checkpoint_best.pth.tar')
-                mox.file.copy(tmp_save_path, model_local_path)
+            
             if abs(args.epochs - epoch) <= 20:
                 tmp_save_path = os.path.join(log_path, 'model_%d.pth.tar' % epoch)
                 save_checkpoint({
@@ -683,13 +635,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     'best_acc1': best_acc1,
                     'optimizer': optimizer.state_dict(),
                 }, False, filename=tmp_save_path)
-                if params['cloud']:
-                    # copy the log file and saved model file to the path
-                    # mox.file.copy_parallel(log_path, params['train_url'])
-                    import moxing as mox
-                    # if is_best:
-                    model_local_path = os.path.join(params['train_url'], 'model_%d.pth.tar' % epoch)
-                    mox.file.copy(tmp_save_path, model_local_path)
+                
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
@@ -755,8 +701,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        top1.update(acc1.item(), images.size(0))
+        top5.update(acc5.item(), images.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -826,8 +772,8 @@ def train2(train_loader, model, criterion, optimizer, epoch, args):
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
 
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        top1.update(acc1.item(), images.size(0))
+        top5.update(acc5.item(), images.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -883,8 +829,8 @@ def validate(val_loader, model, criterion, args):
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
             acc1 = torch.mean(concat_all_gather(acc1), dim=0, keepdim=True)
             acc5 = torch.mean(concat_all_gather(acc5), dim=0, keepdim=True)
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            top1.update(acc1.item(), images.size(0))
+            top5.update(acc5.item(), images.size(0))
             loss = criterion(output, target)
             losses.update(loss.item(), images.size(0))
             # measure elapsed time
@@ -949,8 +895,8 @@ def testing(val_loader, model, criterion, args):
             acc5 = torch.mean(concat_all_gather(acc5), dim=0, keepdim=True)
             correct_count += float(acc1[0]) * images.size(0)
             count_all += images.size(0)
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            top1.update(acc1.item(), images.size(0))
+            top5.update(acc5.item(), images.size(0))
             loss = criterion(output, target)
             losses.update(loss.item(), images.size(0))
             # measure elapsed time
@@ -1015,8 +961,8 @@ def testing2(val_loader, model, criterion, args):
             acc5 = torch.mean(concat_all_gather(acc5), dim=0, keepdim=True)
             correct_count += float(acc1[0]) * images.size(0)
             count_all += images.size(0)
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            top1.update(acc1.item(), images.size(0))
+            top5.update(acc5.item(), images.size(0))
             loss = criterion(output, target)
             losses.update(loss.item(), images.size(0))
             # measure elapsed time
@@ -1161,21 +1107,7 @@ def adjust_batch_learning_rate(optimizer, cur_epoch, cur_batch, batch_total, arg
         param_group['lr'] = lr
 
 
-def accuracy(output, target, topk=(1,)):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
-    with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
 
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-        res = []
-        for k in topk:
-            correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
-            res.append(correct_k.mul_(100.0 / batch_size))
-        return res
 
 
 # utils

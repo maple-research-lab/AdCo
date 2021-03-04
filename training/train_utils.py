@@ -66,7 +66,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         param_group['lr'] = lr
     print("CURRENT NETWORK LR:",lr)
 
-def accuracy(output, target, topk=(1,)):
+def accuracy_prev(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
         maxk = max(topk)
@@ -80,4 +80,33 @@ def accuracy(output, target, topk=(1,)):
         for k in topk:
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
+        return res
+def accuracy(output, target, topk=(1,)):
+    """
+    :param output: predicted prob vectors
+    :param target: ground truth
+    :param topk: top k predictions considered
+    :return:
+    Computes the accuracy over the k top predictions for the specified values of k
+    """
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = target.size(0)
+
+        _, pred = output.topk(maxk, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        # print("correct size: ",correct.size())
+        # print("output size:",output.size())
+        # print("target size:",target.size())
+        # print("correct",correct)
+        # print("target",target)
+        # print("pred",pred)
+        res = []
+        for k in topk:
+            #print("correct view size,",correct[:k].size())
+            correct_k = torch.sum(correct[:k])#correct[:k].view(-1).float().sum(0, keepdim=True)
+            result=correct_k*100.0 / batch_size
+            res.append(result)
+        #print(res)
         return res

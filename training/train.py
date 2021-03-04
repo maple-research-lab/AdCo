@@ -49,8 +49,8 @@ def update_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,crit
     # measure accuracy and record loss
     acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
     losses.update(loss.item(), images[0].size(0))
-    top1.update(acc1[0], images[0].size(0))
-    top5.update(acc5[0], images[0].size(0))
+    top1.update(acc1.item(), images[0].size(0))
+    top5.update(acc5.item(), images[0].size(0))
 
     # compute gradient and do SGD step
     optimizer.zero_grad()
@@ -102,12 +102,12 @@ def update_sym_network(model,images,args,Memory_Bank,losses,top1,top5,optimizer,
     # measure accuracy and record loss
     acc1, acc5 = accuracy(logits1, labels, topk=(1, 5))
     losses.update(loss.item(), images[0].size(0))
-    top1.update(acc1[0], images[0].size(0))
-    top5.update(acc5[0], images[0].size(0))
+    top1.update(acc1.item(), images[0].size(0))
+    top5.update(acc5.item(), images[0].size(0))
     acc1, acc5 = accuracy(logits2, labels, topk=(1, 5))
     losses.update(loss.item(), images[0].size(0))
-    top1.update(acc1[0], images[0].size(0))
-    top5.update(acc5[0], images[0].size(0))
+    top1.update(acc1.item(), images[0].size(0))
+    top5.update(acc5.item(), images[0].size(0))
 
     # compute gradient and do SGD step
     optimizer.zero_grad()
@@ -174,8 +174,8 @@ def update_network_multi(model,images,args,Memory_Bank,losses,top1,top5,optimize
             # measure accuracy and record loss
             acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
             losses.update(loss.item(), images[0].size(0))
-            top1.update(acc1[0], images[0].size(0))
-            top5.update(acc5[0], images[0].size(0))
+            top1.update(acc1.item(), images[0].size(0))
+            top5.update(acc5.item(), images[0].size(0))
     # compute gradient and do SGD step
     optimizer.zero_grad()
     loss.backward()
@@ -228,6 +228,8 @@ def train(train_loader, model,Memory_Bank, criterion,
                 images[k] = images[k].cuda(args.gpu, non_blocking=True)
         batch_size=images[0].size(0)
         if args.multi_crop:
+            if i==0:
+                print("in total %d multi crops adopted"%len(images))
             update_network_multi(model, images, args, Memory_Bank, losses, top1, top5, optimizer, criterion,mem_losses)
         elif not args.sym:
             update_network(model, images, args, Memory_Bank, losses, top1, top5, optimizer, criterion,mem_losses)
@@ -285,8 +287,8 @@ def init_memory(train_loader, model,Memory_Bank, criterion,
         acc1, acc5 = accuracy(logits, labels, topk=(1, 5))
         
         losses.update(loss.item(), images[0].size(0))
-        top1.update(acc1[0], images[0].size(0))
-        top5.update(acc5[0], images[0].size(0))
+        top1.update(acc1.item(), images[0].size(0))
+        top5.update(acc5.item(), images[0].size(0))
         if i % args.print_freq == 0:
             progress.display(i)
 
