@@ -195,7 +195,7 @@ The performance is obtained on a single machine with 8*V100 GPUs.
 #### 1 Download [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) under "./datasets/voc"
 #### 2 Linear Evaluation:
 ```
-# in VOC_CLF folder
+cd VOC_CLF
 python3 main.py --data=../datasets/voc --pretrained=../input.pth.tar
 ```
 Here VOC directory should be the directory includes "vockit" directory.
@@ -222,7 +222,7 @@ python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5
 
 1. Run training:
    ```
-   # in detection folder
+   cd detection
    python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml \
 	--num-gpus 8 MODEL.WEIGHTS ./output.pkl
    ```
