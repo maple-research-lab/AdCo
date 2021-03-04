@@ -20,7 +20,7 @@ Contrastive learning relies on constructing a collection of negative examples th
 
 
 ## Installation  
-AdCo requires single machine with 8*V100 GPUs, CUDA version 10.1 or higher. 
+CUDA version should be 10.1 or higher. 
 ### 1. [`Install git`](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) 
 ### 2. Clone the repository in your computer 
 ```
@@ -63,7 +63,7 @@ conda deactivate(If you want to exit)
 ## Usage
 
 ### Unsupervised Training
-This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset](http://image-net.org/challenges/LSVRC/2012/) to "./datasets/imagenet2012".
+This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset](http://image-net.org/challenges/LSVRC/2012/) under "./datasets/imagenet2012".
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
@@ -127,7 +127,7 @@ Performance:
 </tbody></table>
 
 ### Transfering to VOC07 Classification
-#### 1 Download [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and extract to ./datasets/voc
+#### 1 Download [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) under "./datasets/voc"
 #### 2 Linear Evaluation:
 ```
 # in VOC_CLF folder
@@ -136,14 +136,13 @@ python3 main.py --data=../datasets/voc --pretrained=../input.pth.tar
 Here VOC directory should be the directory includes "vockit" directory.
 
 ### Transfer to Places205 Classification
-#### 1 Download [Dataset](http://places.csail.mit.edu/user/index.php) and extract to ./datasets/places205
+#### 1 Download [Dataset](http://places.csail.mit.edu/user/index.php) under "./datasets/places205"
 #### 2 Linear Evaluation:
 ```
 python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5 --dist-url=tcp://localhost:10001 --pretrained=input.pth.tar
 ```
 
 ### Transfer to Object Detection
-Modified from [MoCo Detection](https://github.com/facebookresearch/moco/tree/master/detection)
 1. Install [detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
 
 1. Convert a pre-trained AdCo model to detectron2's format:
