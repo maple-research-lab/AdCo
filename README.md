@@ -89,7 +89,7 @@ python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:1
 
 
 
-<font size=20>So far we have yet to support multi crop with symmetrical loss, the feature will be added in future.</font>
+<font size=30 >So far we have yet to support multi crop with symmetrical loss, the feature will be added in future.</font>
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:
