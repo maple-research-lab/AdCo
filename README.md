@@ -63,7 +63,7 @@ conda deactivate(If you want to exit)
 ## Usage
 
 ### Unsupervised Training
-This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset] to "./datasets/imagenet2012".
+This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset](http://image-net.org/challenges/LSVRC/2012/) to "./datasets/imagenet2012".
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
