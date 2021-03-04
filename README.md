@@ -1,6 +1,6 @@
 # AdCo
 <a href="https://github.com/marktext/marktext/releases/latest">
-   <img src="https://img.shields.io/badge/AdCo-v2.0.0-green">
+   <img src="https://img.shields.io/badge/AdCo-v1.0.0-green">
    <img src="https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20-green">
    <img src="https://img.shields.io/badge/Language-python3-green">
    <img src="https://img.shields.io/badge/dependencies-tested-green">
