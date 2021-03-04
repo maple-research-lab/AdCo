@@ -43,9 +43,9 @@ def argparser():
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
-    parser.add_argument('--world_size', default=-1, type=int,
+    parser.add_argument('--world_size', default=1, type=int,
                         help='number of nodes for distributed training,args.nodes_num*args.ngpu,here we specify with the number of nodes')
-    parser.add_argument('--rank', default=-1, type=int,
+    parser.add_argument('--rank', default=0, type=int,
                         help='node rank for distributed training,rank of total threads, 0 to args.world_size-1')
     parser.add_argument('--dist_url', default='tcp://224.66.41.62:23456', type=str,
                         help='url used to set up distributed training')

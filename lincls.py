@@ -52,7 +52,7 @@ parser.add_argument('--batch-size', default=256, type=int,
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=30., type=float,
+parser.add_argument('--lr', '--learning-rate', default=10., type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--schedule', default=[15, 25, 30], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by a ratio)')  # default is for places205
@@ -70,9 +70,9 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('--world-size', default=-1, type=int,
+parser.add_argument('--world-size', default=1, type=int,
                     help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,
+parser.add_argument('--rank', default=0, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
                     help='url used to set up distributed training')
@@ -115,7 +115,7 @@ parser.add_argument("--final", default=0, type=int, help="use the final specifie
 parser.add_argument("--avg_pool", default=1, type=int, help="average pool output size")
 parser.add_argument("--crop_scale", type=float, default=[0.2, 1.0], nargs="+",
                     help="argument in RandomResizedCrop (example: [1., 0.14])")
-parser.add_argument("--train_strong", type=int, default=1, help="training use stronger augmentation or not")
+parser.add_argument("--train_strong", type=int, default=0, help="training use stronger augmentation or not")
 parser.add_argument("--sgdr", type=int, default=0, help="training with warm up (1) or restart warm up (2)")
 parser.add_argument("--sgdr_t0", type=int, default=10, help="sgdr t0")
 parser.add_argument("--sgdr_t_mult", type=int, default=1, help="sgdr t mult")

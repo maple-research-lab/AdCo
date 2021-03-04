@@ -15,26 +15,12 @@ License: MIT for academic use.
 
 Contact: Guo-Jun Qi (guojunq@gmail.com)
 
-## Citation:
-[AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries](https://arxiv.org/pdf/2011.08435.pdf)
-```
-@article{hu2020adco,
-  title={AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries},
-  author={Hu, Qianjiang and Wang, Xiao and Hu, Wei and Qi, Guo-Jun},
-  journal={arXiv preprint arXiv:2011.08435},
-  year={2020}
-}
-```
-
 ## Introduction
 Contrastive learning relies on constructing a collection of negative examples that are sufficiently hard to discriminate against positive queries when their representations are self-trained. Existing contrastive learning methods either maintain a queue of negative samples over minibatches while only a small portion of them are updated in an iteration, or only use the other examples from the current minibatch as negatives. They could not closely track the change of the learned representation over iterations by updating the entire queue as a whole, or discard the useful information from the past minibatches. Alternatively, we present to directly learn a set of negative adversaries playing against the self-trained representation. Two players, the representation network and negative adversaries, are alternately updated to obtain the most challenging negative examples against which the representation of positive queries will be trained to discriminate. We further show that the negative adversaries are updated towards a weighted combination of positive queries by maximizing the adversarial contrastive loss, thereby allowing them to closely track the change of representations over time. Experiment results demonstrate the proposed Adversarial Contrastive (AdCo) model not only achieves superior performances (a top-1 accuracy of 73.2% over 200 epochs and 75.7% over 800 epochs with linear evaluation on ImageNet), but also can be pre-trained more efficiently with much shorter GPU time and fewer epochs.
 
-## Protocol
-<p align="center">
-  <img src="figure/adco_protocol.png" alt="protocol" width="80%">
-</p> 
 
 ## Installation  
+AdCo requires single machine with 8*V100 GPUs, CUDA version 10.1 or higher. 
 ### 1. [`Install git`](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) 
 ### 2. Clone the repository in your computer 
 ```
@@ -73,109 +59,30 @@ conda activate AdCo
 conda deactivate(If you want to exit) 
 ```
 
-## Usage
-```
-python3 main_adco.py -h
-  --log_path LOG_PATH   log path for saving models
-  -a ARCH, --arch ARCH  model architecture: alexnet | densenet121 |
-                        densenet161 | densenet169 | densenet201 | googlenet |
-                        inception_v3 | mnasnet0_5 | mnasnet0_75 | mnasnet1_0 |
-                        mnasnet1_3 | mobilenet_v2 | resnet101 | resnet152 |
-                        resnet18 | resnet34 | resnet50 | resnext101_32x8d |
-                        resnext50_32x4d | shufflenet_v2_x0_5 |
-                        shufflenet_v2_x1_0 | shufflenet_v2_x1_5 |
-                        shufflenet_v2_x2_0 | squeezenet1_0 | squeezenet1_1 |
-                        vgg11 | vgg11_bn | vgg13 | vgg13_bn | vgg16 | vgg16_bn
-                        | vgg19 | vgg19_bn | wide_resnet101_2 |
-                        wide_resnet50_2 (default: resnet50)
-  -j N, --workers N     number of data loading workers (default: 32)
-  --epochs N            number of total epochs to run
-  --start_epoch N       manual epoch number (useful on restarts)
-  -b N, --batch_size N  mini-batch size (default: 256), this is the total
-                        batch size of all GPUs on the current node when using
-                        Data Parallel or Distributed Data Parallel
-  --lr LR, --learning_rate LR
-                        initial learning rate
-  --lr_final LR_FINAL   final learning rate
-  --schedule [SCHEDULE [SCHEDULE ...]]
-                        learning rate schedule: default: cos scheduler
-  --momentum M          momentum of SGD solver
-  --wd W, --weight_decay W
-                        weight decay (default: 1e-4)
-  -p N, --print_freq N  print frequency (default: 10)
-  --resume PATH         path to latest checkpoint (default: none)
-  --world_size WORLD_SIZE
-                        number of nodes for distributed
-                        training,args.nodes_num*args.ngpu,here we specify with
-                        the number of nodes
-  --rank RANK           node rank for distributed training,rank of total
-                        threads, 0 to args.world_size-1
-  --dist_url DIST_URL   url used to set up distributed training
-  --dist_backend DIST_BACKEND
-                        distributed backend
-  --seed SEED           seed for initializing training.
-  --gpu GPU             GPU id to use.
-  --multiprocessing_distributed MULTIPROCESSING_DISTRIBUTED
-                        Use multi-processing distributed training to launch N
-                        processes per node, which has N GPUs. This is the
-                        fastest way to use PyTorch for either single node or
-                        multi node data parallel training
-  --moco_dim MOCO_DIM   feature dimension (default: 128)
-  --moco_m MOCO_M       moco momentum of updating key encoder (default: 0.999)
-  --moco_t MOCO_T       softmax temperature for network (default: 0.12)
-  --mlp MLP             use mlp head
-  --cos COS             use cosine lr schedule
-  --dataset DATASET     Specify dataset: ImageNet or cifar10
-  --choose CHOOSE       choose gpu for training
-  --save_path SAVE_PATH
-                        model and record save path
-  --nmb_crops NMB_CROPS [NMB_CROPS ...]
-                        list of number of crops (example: [2, 6])
-  --size_crops SIZE_CROPS [SIZE_CROPS ...]
-                        crops resolutions (example: [224, 96])
-  --min_scale_crops MIN_SCALE_CROPS [MIN_SCALE_CROPS ...]
-                        argument in RandomResizedCrop (example: [0.14, 0.05])
-  --max_scale_crops MAX_SCALE_CROPS [MAX_SCALE_CROPS ...]
-                        argument in RandomResizedCrop (example: [1., 0.14])
-  --cluster CLUSTER     number of learnable comparison features
-  --memory_lr MEMORY_LR
-                        learning rate for adversial memory bank
-  --ad_init AD_INIT     use feature encoding to init or not
-  --nodes_num NODES_NUM
-                        number of nodes to use
-  --ngpu NGPU           number of gpus per node
-  --master_addr MASTER_ADDR
-                        addr for master node
-  --master_port MASTER_PORT
-                        port for master node
-  --node_rank NODE_RANK
-                        rank of machine, 0 to nodes_num-1
-  --mem_t MEM_T         temperature for memory bank(default: 0.02)
-  --mem_wd MEM_WD       weight decay of memory bank (default: 0)
-  --sym SYM             train with symmetric loss or not
 
-```
+## Usage
 
 ### Unsupervised Training
-This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported.
+This implementation only supports multi-gpu, DistributedDataParallel training, which is faster and simpler; single-gpu or DataParallel training is not supported. Before training, please download [ImageNet2012 Dataset] to "./datasets/imagenet2012".
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
-python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=[/path/to/imagenet2012] --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=0
+python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=0
 ```
 ##### 2 With symmetrical loss:
 ```
-python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=[/path/to/imagenet2012] --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0 --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --sym=1
+python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=1
 ```
 #### Multi Crop
 ```
-python3 main_adco.py --mem_wd=1e-4 --cluster=65536 --data=[/path/to/imagenet2012] --world_size=1 --cos=1 --moco_t=0.12 --print_freq=1000 --save_path=. --rank=0  --batch_size=256 --mem_t=0.02 --dist_url=tcp://localhost:10001 --memory_lr=3 --moco_m=0.999 --arch=resnet50 --moco_dim=128 --lr=0.03 --multi_crop=1
+python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --multi_crop=1
 ```
+So far we don't support multi crop with symmetrical loss. 
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:
 ```
-python3 lincls.py --train_strong=0 --epochs=100 --data=[/path/to/imagenet2012] -a=resnet50 --lr=10 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=[/path/to/pretrained/model]
+python3 lincls.py --data=./datasets/imagenet2012 --dist-url=tcp://localhost:10001 --pretrained=input.pth.tar
 ```
 Performance:
 <table><tbody>
@@ -220,22 +127,51 @@ Performance:
 </tbody></table>
 
 ### Transfering to VOC07 Classification
-#### 1 Downloading [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar).
+#### 1 Download [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and extract to ./datasets/voc
 #### 2 Linear Evaluation:
 ```
 # in VOC_CLF folder
-python3 main.py --data=[/path/to/voc07] --pretrained=[/path/to/pretrained/model]
+python3 main.py --data=../datasets/voc --pretrained=../input.pth.tar
 ```
 Here VOC directory should be the directory includes "vockit" directory.
 
-### Transfering to Places205 Classification
-#### 1 Downloading [Dataset](http://places.csail.mit.edu/user/index.php)
+### Transfer to Places205 Classification
+#### 1 Download [Dataset](http://places.csail.mit.edu/user/index.php) and extract to ./datasets/places205
 #### 2 Linear Evaluation:
 ```
-python3 lincls.py --dataset=Place205 --train_strong=0 --sgdr=1 --epochs=100 --data=[/path/to/places205] -a=resnet50 --lr=5 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=[/path/to/pretrained/model]
+python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5 --dist-url=tcp://localhost:10001 --pretrained=input.pth.tar
 ```
 
-### Transferring to Object Detection
-Please refer to [MoCo Detection](https://github.com/facebookresearch/moco/blob/master/detection), we adopted the same protocol for detection.
+### Transfer to Object Detection
+Modified from [MoCo Detection](https://github.com/facebookresearch/moco/tree/master/detection)
+1. Install [detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
 
+1. Convert a pre-trained AdCo model to detectron2's format:
+   ```
+   # in detection folder
+   python3 convert-pretrain-to-detectron2.py input.pth.tar output.pkl
+   ```
+
+1. download [VOC Dataset](http://places.csail.mit.edu/user/index.php) and [COCO Dataset](https://cocodataset.org/#download) under "./detection/datasets" directory,
+   following the [directory structure](https://github.com/facebookresearch/detectron2/tree/master/datasets)
+	 requried by detectron2.
+
+1. Run training:
+   ```
+   # in detection folder
+   python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml \
+	--num-gpus 8 MODEL.WEIGHTS ./output.pkl
+   ```
+
+
+## Citation:
+[AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries](https://arxiv.org/pdf/2011.08435.pdf)
+```
+@article{hu2020adco,
+  title={AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries},
+  author={Hu, Qianjiang and Wang, Xiao and Hu, Wei and Qi, Guo-Jun},
+  journal={arXiv preprint arXiv:2011.08435},
+  year={2020}
+}
+```
 
