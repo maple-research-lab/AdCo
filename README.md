@@ -231,7 +231,7 @@ python3 main.py --data=path/to/voc07 --pretrained=path/to/pretrained/model
 #### 1 Downloading [Dataset](http://places.csail.mit.edu/user/index.php)
 #### 2 Linear Evaluation:
 ```
-python3 classification/lincls.py --train_strong=0 --sgdr=1 --epochs=100 --data=path/to/places205 -a=resnet50 --lr=5 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=path/to/pretrained/model
+python3 classification/lincls.py --dataset=Place205 --train_strong=0 --sgdr=1 --epochs=100 --data=path/to/places205 -a=resnet50 --lr=5 --batch-size=256 --dist-url=tcp://localhost:10001 --multiprocessing-distributed=1 --world-size=1 --rank=0 --cos=1 --pretrained=path/to/pretrained/model
 ```
 
 ### Transferring to Object Detection
