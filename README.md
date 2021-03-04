@@ -73,17 +73,27 @@ python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:1
 ```
 python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=1
 ```
+#### 3 setting different numbers of negative samples:
+```
+# e.g., training with 8192 negative samples and symmetrical loss
+python3 main_adco.py --cluster 8192 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=1
+```
+
 #### Multi Crop
 ```
 python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --multi_crop=1
 ```
-So far we don't support multi crop with symmetrical loss. 
+
+
+
+<font size=20>So far we have yet to support multi crop with symmetrical loss, the feature will be added in future.</font>
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:
 ```
 python3 lincls.py --data=./datasets/imagenet2012 --dist-url=tcp://localhost:10001 --pretrained=input.pth.tar
 ```
+
 Performance:
 <table><tbody>
 <!-- START TABLE -->
@@ -125,6 +135,58 @@ Performance:
 <td align="center">70.6</td>
 </tr>
 </tbody></table>
+
+Performance with different negative samples:
+<table><tbody>
+<!-- START TABLE -->
+<!-- TABLE HEADER -->
+<th valign="bottom">pre-train<br/>network</th>
+<th valign="bottom">pre-train<br/>epochs</th>
+<th valign="bottom">negative<br/>samples </th>
+<th valign="bottom">Symmetrical<br/>Loss</th>
+<th valign="bottom">AdCo<br/>top-1 acc.</th>
+<!-- TABLE BODY -->
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">65536</td>
+<td align="center">No</td>
+<td align="center">68.6</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">65536</td>
+<td align="center">Yes</td>
+<td align="center">70.6</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">16384</td>
+<td align="center">No</td>
+<td align="center">68.6</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">16384</td>
+<td align="center">Yes</td>
+<td align="center">70.2</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">8192</td>
+<td align="center">No</td>
+<td align="center">68.4</td>
+</tr>
+<tr><td align="left">ResNet-50</td>
+<td align="center">200</td>
+<td align="center">8192</td>
+<td align="center">Yes</td>
+<td align="center">70.2</td>
+</tr>
+</tbody></table>
+
+
+The performance is obtained on a single machine with 8*V100 GPUs.
+
 
 ### Transfering to VOC07 Classification
 #### 1 Download [Dataset](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) under "./datasets/voc"
