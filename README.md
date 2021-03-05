@@ -70,21 +70,21 @@ This implementation only supports multi-gpu, DistributedDataParallel training, w
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
-python3 main_adco.py --sym=0 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 
+python3 main_adco.py --sym=0 --lr=0.03 --memory_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 
 ```
 ##### 2 With symmetrical loss:
 ```
-python3 main_adco.py --sym=1 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
+python3 main_adco.py --sym=1 --lr=0.03 --memory_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 #### 3 setting different numbers of negative samples:
 ```
 # e.g., training with 8192 negative samples and symmetrical loss
-python3 main_adco.py --sym=1 --lr=0.04 --mem_lr=3 --moco_t=0.14 --mem_t=0.03 --cluster 8192 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
+python3 main_adco.py --sym=1 --lr=0.04 --memory_lr=3 --moco_t=0.14 --mem_t=0.03 --cluster 8192 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 
 #### Multi Crop
 ```
-python3 main_adco.py --multi_crop=1 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
+python3 main_adco.py --multi_crop=1 --lr=0.03 --memory_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 
 
