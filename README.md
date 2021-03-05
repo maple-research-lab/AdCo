@@ -70,26 +70,26 @@ This implementation only supports multi-gpu, DistributedDataParallel training, w
 #### Single Crop
 ##### 1 Without symmetrical loss:
 ```
-python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=0
+python3 main_adco.py --sym=0 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 
 ```
 ##### 2 With symmetrical loss:
 ```
-python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=1
+python3 main_adco.py --sym=1 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 #### 3 setting different numbers of negative samples:
 ```
 # e.g., training with 8192 negative samples and symmetrical loss
-python3 main_adco.py --cluster 8192 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --sym=1
+python3 main_adco.py --sym=1 --lr=0.04 --mem_lr=3 --moco_t=0.14 --mem_t=0.03 --cluster 8192 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 
 #### Multi Crop
 ```
-python3 main_adco.py --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001 --multi_crop=1
+python3 main_adco.py --multi_crop=1 --lr=0.03 --mem_lr=3 --moco_t=0.12 --mem_t=0.02 --data=./datasets/imagenet2012 --dist_url=tcp://localhost:10001
 ```
 
 
 
-<font size=30 >So far we have yet to support multi crop with symmetrical loss, the feature will be added in future.</font>
+<font size=0 >So far we have yet to support multi crop with symmetrical loss, the feature will be added in future.</font>
 
 ### Linear Classification
 With a pre-trained model, we can easily evaluate its performance on ImageNet with:
