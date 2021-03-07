@@ -106,38 +106,45 @@ Performance:
 <th valign="bottom">Crop</th>
 <th valign="bottom">Symmetrical<br/>Loss</th>
 <th valign="bottom">AdCo<br/>top-1 acc.</th>
+<th valign="bottom">Model<br/>Link</th>
 <!-- TABLE BODY -->
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Single</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EUZnXZAGrDFAoHEy7HxYsJgBqk7VDOjIGa1wUWXk2FArbQ?e=Gs9rXD">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Multi</td>
 <td align="center">No</td>
 <td align="center">73.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQKYrTt0nolMrKYLQ-FPHR4Be6ZA-pPXa9HQArhFQqEr2g?e=A2gCdH">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">800</td>
 <td align="center">Single</td>
 <td align="center">No</td>
 <td align="center">72.8</td>
+<td align="center"><a href="">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">800</td>
 <td align="center">Multi</td>
 <td align="center">No</td>
 <td align="center">75.7</td>
+<td align="center">None</td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Single</td>
 <td align="center">Yes</td>
 <td align="center">70.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQAk2hTJo3NPl8TggXdzE6wB4yGEMD8_pRVcRhxlYCpSLQ?e=8wdc4a">model</a></td>
 </tr>
 </tbody></table>
+Really sorry that we can't provide multi-800 model, which is because that we train it with 32 internal GPUs and we can't download it because of company regulations. For downstream tasks, we found single-800 also had similar performance. Thus, we suggested you to use this [model]() for downstream purposes.
 
 Performance with different negative samples:
 <table><tbody>
@@ -148,42 +155,49 @@ Performance with different negative samples:
 <th valign="bottom">negative<br/>samples </th>
 <th valign="bottom">Symmetrical<br/>Loss</th>
 <th valign="bottom">AdCo<br/>top-1 acc.</th>
+<th valign="bottom">Model<br/>Link</th>
 <!-- TABLE BODY -->
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">65536</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EUZnXZAGrDFAoHEy7HxYsJgBqk7VDOjIGa1wUWXk2FArbQ?e=Gs9rXD">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">65536</td>
 <td align="center">Yes</td>
 <td align="center">70.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQAk2hTJo3NPl8TggXdzE6wB4yGEMD8_pRVcRhxlYCpSLQ?e=8wdc4a">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">16384</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/ESxqq4V9MtVHmo_u4uotVQ0BBpLy8RuCSCILrIqsqXN_6g?e=p2HAXH">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">16384</td>
 <td align="center">Yes</td>
 <td align="center">70.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EamboKxWLFlOr6qJaQUWWDIB7ut_zAituINY9PT69fYhFQ?e=YLEEde">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">8192</td>
 <td align="center">No</td>
 <td align="center">68.4</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EcWjd4-4tepHsqp-Idd81lcBf61T2CyQ3sc1koEqMm74xg?e=BWqBYx">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">8192</td>
 <td align="center">Yes</td>
 <td align="center">70.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/ERxg2B8-rihKs3Wm78cT76EB9euFLDWlHkvyMAAjJBODOQ?e=l55cMa">model</a></td>	
 </tr>
 </tbody></table>
 
