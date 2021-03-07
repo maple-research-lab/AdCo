@@ -144,7 +144,9 @@ Performance:
 <td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQAk2hTJo3NPl8TggXdzE6wB4yGEMD8_pRVcRhxlYCpSLQ?e=8wdc4a">model</a></td>
 </tr>
 </tbody></table>
+
 Really sorry that we can't provide multi-800 model, which is because that we train it with 32 internal GPUs and we can't download it because of company regulations. For downstream tasks, we found single-800 also had similar performance. Thus, we suggested you to use this [model]() for downstream purposes.
+
 
 Performance with different negative samples:
 <table><tbody>
