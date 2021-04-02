@@ -9,7 +9,7 @@
 
 AdCo is a contrastive-learning based self-supervised learning methods. 
 
-Copyright (C) 2020 Qianjiang*, Xiao Wang*, Wei Hu, Guo-Jun Qi
+Copyright (C) 2020 Qianjiang Hu*, Xiao Wang*, Wei Hu, Guo-Jun Qi
 
 License: MIT for academic use.
 
