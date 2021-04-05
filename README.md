@@ -226,17 +226,17 @@ python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5
 ### Transfer to Object Detection
 1. Install [detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
 
-1. Convert a pre-trained AdCo model to detectron2's format:
+2. Convert a pre-trained AdCo model to detectron2's format:
    ```
    # in detection folder
    python3 convert-pretrain-to-detectron2.py input.pth.tar output.pkl
    ```
 
-1. download [VOC Dataset](http://places.csail.mit.edu/user/index.php) and [COCO Dataset](https://cocodataset.org/#download) under "./detection/datasets" directory,
+3. download [VOC Dataset](http://places.csail.mit.edu/user/index.php) and [COCO Dataset](https://cocodataset.org/#download) under "./detection/datasets" directory,
    following the [directory structure](https://github.com/facebookresearch/detectron2/tree/master/datasets)
 	 requried by detectron2.
 
-1. Run training:
+4. Run training:
    ```
    cd detection
    python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml \
