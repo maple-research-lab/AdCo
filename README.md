@@ -145,7 +145,7 @@ Performance:
 </tr>
 </tbody></table>
 
-Really sorry that we can't provide 800 epochs' model, which is because that we train it with 32 internal GPUs and we can't download it because of company regulations. For downstream tasks, we found multi-200epoch model also had similar performance. Thus, we suggested you to use this [model](https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQKYrTt0nolMrKYLQ-FPHR4Be6ZA-pPXa9HQArhFQqEr2g?e=A2gCdH) for downstream purposes.
+Really sorry that we can't provide 800 epochs' model, which is because of the company regulations, since we trained them on company machines. For downstream tasks, we found multi-200epoch model also had similar performances. Thus, we suggested you to use this [model](https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQKYrTt0nolMrKYLQ-FPHR4Be6ZA-pPXa9HQArhFQqEr2g?e=A2gCdH) for downstream purposes.
 
 
 Performance with different negative samples:
