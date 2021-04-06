@@ -9,7 +9,7 @@
 
 AdCo is a contrastive-learning based self-supervised learning methods. 
 
-Copyright (C) 2020 Qianjiang*, Xiao Wang*, Wei Hu, Guo-Jun Qi
+Copyright (C) 2020 Qianjiang Hu*, Xiao Wang*, Wei Hu, Guo-Jun Qi
 
 License: MIT for academic use.
 
@@ -106,38 +106,47 @@ Performance:
 <th valign="bottom">Crop</th>
 <th valign="bottom">Symmetrical<br/>Loss</th>
 <th valign="bottom">AdCo<br/>top-1 acc.</th>
+<th valign="bottom">Model<br/>Link</th>
 <!-- TABLE BODY -->
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Single</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EUZnXZAGrDFAoHEy7HxYsJgBqk7VDOjIGa1wUWXk2FArbQ?e=Gs9rXD">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Multi</td>
 <td align="center">No</td>
 <td align="center">73.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQKYrTt0nolMrKYLQ-FPHR4Be6ZA-pPXa9HQArhFQqEr2g?e=A2gCdH">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">800</td>
 <td align="center">Single</td>
 <td align="center">No</td>
 <td align="center">72.8</td>
+<td align="center">None</td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">800</td>
 <td align="center">Multi</td>
 <td align="center">No</td>
 <td align="center">75.7</td>
+<td align="center">None</td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">Single</td>
 <td align="center">Yes</td>
 <td align="center">70.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQAk2hTJo3NPl8TggXdzE6wB4yGEMD8_pRVcRhxlYCpSLQ?e=8wdc4a">model</a></td>
 </tr>
 </tbody></table>
+
+Really sorry that we can't provide 800 epochs' model, which is because that we train it with 32 internal GPUs and we can't download it because of company regulations. For downstream tasks, we found multi-200epoch model also had similar performance. Thus, we suggested you to use this [model](https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQKYrTt0nolMrKYLQ-FPHR4Be6ZA-pPXa9HQArhFQqEr2g?e=A2gCdH) for downstream purposes.
+
 
 Performance with different negative samples:
 <table><tbody>
@@ -148,42 +157,49 @@ Performance with different negative samples:
 <th valign="bottom">negative<br/>samples </th>
 <th valign="bottom">Symmetrical<br/>Loss</th>
 <th valign="bottom">AdCo<br/>top-1 acc.</th>
+<th valign="bottom">Model<br/>Link</th>
 <!-- TABLE BODY -->
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">65536</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EUZnXZAGrDFAoHEy7HxYsJgBqk7VDOjIGa1wUWXk2FArbQ?e=Gs9rXD">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">65536</td>
 <td align="center">Yes</td>
 <td align="center">70.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EQAk2hTJo3NPl8TggXdzE6wB4yGEMD8_pRVcRhxlYCpSLQ?e=8wdc4a">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">16384</td>
 <td align="center">No</td>
 <td align="center">68.6</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/ESxqq4V9MtVHmo_u4uotVQ0BBpLy8RuCSCILrIqsqXN_6g?e=p2HAXH">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">16384</td>
 <td align="center">Yes</td>
 <td align="center">70.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EamboKxWLFlOr6qJaQUWWDIB7ut_zAituINY9PT69fYhFQ?e=YLEEde">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">8192</td>
 <td align="center">No</td>
 <td align="center">68.4</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/EcWjd4-4tepHsqp-Idd81lcBf61T2CyQ3sc1koEqMm74xg?e=BWqBYx">model</a></td>
 </tr>
 <tr><td align="left">ResNet-50</td>
 <td align="center">200</td>
 <td align="center">8192</td>
 <td align="center">Yes</td>
 <td align="center">70.2</td>
+<td align="center"><a href="https://purdue0-my.sharepoint.com/:u:/g/personal/wang3702_purdue_edu/ERxg2B8-rihKs3Wm78cT76EB9euFLDWlHkvyMAAjJBODOQ?e=l55cMa">model</a></td>	
 </tr>
 </tbody></table>
 
@@ -208,25 +224,29 @@ python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5
 ```
 
 ### Transfer to Object Detection
-1. Install [detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
+#### 1. Install [detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).
 
-1. Convert a pre-trained AdCo model to detectron2's format:
+#### 2. Convert a pre-trained AdCo model to detectron2's format:
    ```
    # in detection folder
    python3 convert-pretrain-to-detectron2.py input.pth.tar output.pkl
    ```
 
-1. download [VOC Dataset](http://places.csail.mit.edu/user/index.php) and [COCO Dataset](https://cocodataset.org/#download) under "./detection/datasets" directory,
+#### 3. download [VOC Dataset](http://places.csail.mit.edu/user/index.php) and [COCO Dataset](https://cocodataset.org/#download) under "./detection/datasets" directory,
    following the [directory structure](https://github.com/facebookresearch/detectron2/tree/master/datasets)
 	 requried by detectron2.
 
-1. Run training:
+#### 4. Run training:
+##### 4.1 Pascal detection
    ```
    cd detection
-   python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml \
-	--num-gpus 8 MODEL.WEIGHTS ./output.pkl
+   python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml --num-gpus 8 MODEL.WEIGHTS ./output.pkl
    ```
-
+##### 4.2 COCO detection
+```
+   cd detection
+   python train_net.py --config-file configs/coco_R_50_C4_2x_adco.yaml --num-gpus 8 MODEL.WEIGHTS ./output.pkl
+   ```
 
 ## Citation:
 [AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries](https://arxiv.org/pdf/2011.08435.pdf)
