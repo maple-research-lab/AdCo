@@ -23,8 +23,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-# from Data_Processing.VOC_Dataset import PascalVOC_Dataset
-# from Data_Processing.VOC_utils import get_ap_score
 from data_processing.loader import GaussianBlur
 from ops.os_operation import mkdir
 from training.train_utils import accuracy
@@ -91,7 +89,6 @@ parser.add_argument('--multiprocessing-distributed', type=int, default=1,
 parser.add_argument('--pretrained', default='', type=str,
                     help='path to moco pretrained checkpoint')
 parser.add_argument('--choose', type=str, default=None, help="choose gpu for training")
-parser.add_argument("--use_swav", type=int, default=0, help="use swav model or not")
 parser.add_argument("--dataset", type=str, default="ImageNet", help="which dataset is used to finetune")
 parser.add_argument("--aug", type=int, default=0, help="use augmentation or not during fine tuning")
 parser.add_argument("--size_crops", type=int, default=[224, 192, 160, 128, 96], nargs="+",
@@ -188,14 +185,11 @@ def main_worker(gpu, ngpus_per_node, args):
                                 world_size=args.world_size, rank=args.rank)
     # create model
     print("=> creating model '{}'".format(args.arch))
-    if args.dataset == "VOC2007":
-        num_classes = 20
-    elif args.dataset == "Place205":
+    if args.dataset == "Place205":
         num_classes = 205
     else:
         num_classes = 1000
-    # import src.resnet50 as resnet_models
-    # model = resnet_models.__dict__[args.arch](output_dim=num_classes, eval_mode=True)
+    
     model = models.__dict__[args.arch](num_classes=num_classes)
 
     # freeze all layers but the last fc
@@ -203,8 +197,6 @@ def main_worker(gpu, ngpus_per_node, args):
         if name not in ['fc.weight', 'fc.bias']:
             param.requires_grad = False
 
-    # model.avgpool=nn.AdaptiveAvgPool2d((params['avg_pool'], params['avg_pool']))
-    # model.fc=nn.Linear(2048*(params['avg_pool']**2), num_classes)
     # init the fc layer
     model.fc.weight.data.normal_(mean=0.0, std=0.01)
     model.fc.bias.data.zero_()
@@ -216,27 +208,14 @@ def main_worker(gpu, ngpus_per_node, args):
             print("=> loading checkpoint '{}'".format(args.pretrained))
 
             checkpoint = torch.load(args.pretrained, map_location="cpu")
-
-            if args.use_swav:
-                # remove prefixe "module."
-                state_dict = checkpoint
-                state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-                for k, v in model.state_dict().items():
-                    if k not in list(state_dict):
-                        print('key "{}" could not be found in provided state dict'.format(k))
-                    elif state_dict[k].shape != v.shape:
-                        print('key "{}" is of different shape in model and provided state dict'.format(k))
-                        state_dict[k] = v
-
-            else:
-                state_dict = checkpoint['state_dict']
-                for k in list(state_dict.keys()):
-                    # retain only encoder_q up to before the embedding layer
-                    if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
-                        # remove prefix
-                        state_dict[k[len("module.encoder_q."):]] = state_dict[k]
-                    # delete renamed or unused k
-                    del state_dict[k]
+            state_dict = checkpoint['state_dict']
+            for k in list(state_dict.keys()):
+                # retain only encoder_q up to before the embedding layer
+                if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
+                    # remove prefix
+                    state_dict[k[len("module.encoder_q."):]] = state_dict[k]
+                # delete renamed or unused k
+                del state_dict[k]
 
             args.start_epoch = 0
             msg = model.load_state_dict(state_dict, strict=False)
@@ -278,10 +257,7 @@ def main_worker(gpu, ngpus_per_node, args):
             model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
-    if args.dataset == "VOC2007":
-        criterion = torch.nn.BCEWithLogitsLoss(reduction='sum').cuda(args.gpu)
-    else:
-        criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
@@ -302,7 +278,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 checkpoint = torch.load(args.resume, map_location=loc)
 
             args.start_epoch = checkpoint['epoch']
-            best_acc1 = checkpoint['best_acc1']
+            best_acc1 = torch.tensor(checkpoint['best_acc1'])
             if args.gpu is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc1 = best_acc1.to(args.gpu)
@@ -322,17 +298,6 @@ def main_worker(gpu, ngpus_per_node, args):
         valdir = os.path.join(data_path, 'val')
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
-        # transform_train = transforms.Compose([
-        #     transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        #     transforms.RandomApply([
-        #         transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        #     ], p=0.8),
-        #     transforms.RandomGrayscale(p=0.2),
-        #     transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-        #     transforms.RandomHorizontalFlip(),
-        #     transforms.ToTensor(),
-        #     normalize
-        # ])
         if args.train_strong:
             transform_train = transforms.Compose([
                 transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
@@ -364,62 +329,17 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.ToTensor(),
             normalize,
         ])
-        # transform_test = transforms.Compose([
-        #     transforms.RandomResizedCrop(224, scale=(args.crop_scale[0], args.crop_scale[1])),
-        #     #transforms.RandomApply([
-        #     #    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-        #     #], p=0.8),
-        #     #transforms.RandomGrayscale(p=0.2),
-        #     #transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-        #     transforms.RandomHorizontalFlip(),
-        #     transforms.ToTensor(),
-        #     normalize
-        # ])
-        transform_testfinal = transforms.Compose([
-            transforms.RandomResizedCrop(224, scale=(args.crop_scale[0], args.crop_scale[1])),
-            # transforms.RandomApply([
-            #    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            # ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            # transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ])
-        from data_processing.MultiCrop_Transform import Last_transform
-        transform_testfinal = Last_transform(8, transform_testfinal)
-        transform_testfinal2 = transforms.Compose([
-            transforms.RandomResizedCrop(224, scale=(args.crop_scale[0], args.crop_scale[1])),
-            # transforms.RandomApply([
-            #    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-            # ], p=0.8),
-            # transforms.RandomGrayscale(p=0.2),
-            # transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ])
-        from data_processing.MultiCrop_Transform import Last_transform
-        transform_testfinal2 = Last_transform(8, transform_testfinal2)
-
-        # transform_testfinal=TenCrop_transform(normalize)
         train_dataset = datasets.ImageFolder(traindir, transform_train)
         val_dataset = datasets.ImageFolder(valdir, transform_test)
-        test_dataset = datasets.ImageFolder(valdir, transform_testfinal)
-        test_dataset2 = datasets.ImageFolder(valdir, transform_testfinal2)
 
         if args.distributed:
             train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
             val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset,
                                                                           shuffle=True)  # different gpu forward individual based on its own statistics
             # val_sampler=None
-            test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset, shuffle=False)
-            test_sampler2 = torch.utils.data.distributed.DistributedSampler(test_dataset, shuffle=False)
         else:
             train_sampler = None
             val_sampler = None
-            test_sampler = None
-            test_sampler = None
 
         train_loader = torch.utils.data.DataLoader(
             train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
@@ -431,15 +351,6 @@ def main_worker(gpu, ngpus_per_node, args):
             # different gpu forward is different, thus it's necessary
             num_workers=args.workers, pin_memory=True)
 
-        test_loader = torch.utils.data.DataLoader(
-            test_dataset, sampler=test_sampler,
-            batch_size=args.batch_size, shuffle=(test_sampler is None),
-            num_workers=args.workers, pin_memory=True)
-
-        test_loader2 = torch.utils.data.DataLoader(
-            test_dataset2, sampler=test_sampler2,
-            batch_size=args.batch_size, shuffle=(test_sampler2 is None),
-            num_workers=args.workers, pin_memory=True)
 
     elif args.dataset == "Place205":
         from data_processing.Place205_Dataset import Places205
@@ -492,59 +403,15 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize,
         ])
 
-        if args.randcrop:
-            transform_testfinal = transforms.Compose([
-                transforms.RandomCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize
-            ])
-            transform_testfinal2 = transforms.Compose([
-                transforms.RandomCrop(224),
-                # transforms.RandomApply([
-                #    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-                # ], p=0.8),
-                # transforms.RandomGrayscale(p=0.2),
-                # transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize
-            ])
-        else:
-            transform_testfinal = transforms.Compose([
-                transforms.RandomResizedCrop(224, scale=(args.crop_scale[0], args.crop_scale[1])),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize
-            ])
-            transform_testfinal2 = transforms.Compose([
-                transforms.RandomResizedCrop(224, scale=(args.crop_scale[0], args.crop_scale[1])),
-                # transforms.RandomApply([
-                #    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)  # not strengthened
-                # ], p=0.8),
-                # transforms.RandomGrayscale(p=0.2),
-                # transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.5),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize
-            ])
-        from data_processing.MultiCrop_Transform import Last_transform
-        transform_testfinal2 = Last_transform(8, transform_testfinal2)
-        transform_testfinal = Last_transform(8, transform_testfinal)
         train_dataset = Places205(args.data, 'train', transform_train)
         valid_dataset = Places205(args.data, 'val', transform_valid)
-        test_dataset = Places205(args.data, 'val', transform_testfinal)
-        test_dataset2 = Places205(args.data, 'val', transform_testfinal2)
         if args.distributed:
             train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
             val_sampler = torch.utils.data.distributed.DistributedSampler(valid_dataset, shuffle=False)
             #             val_sampler = None
-            test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset, shuffle=False)
-            test_sampler2 = torch.utils.data.distributed.DistributedSampler(test_dataset, shuffle=False)
         else:
             train_sampler = None
             val_sampler = None
-            test_sampler = None
 
         train_loader = torch.utils.data.DataLoader(
             train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
@@ -554,14 +421,6 @@ def main_worker(gpu, ngpus_per_node, args):
             valid_dataset, sampler=val_sampler,
             batch_size=args.batch_size,
             num_workers=args.workers, pin_memory=True)
-        test_loader = torch.utils.data.DataLoader(
-            test_dataset, sampler=test_sampler,
-            batch_size=args.batch_size,
-            num_workers=args.workers, pin_memory=True)
-        test_loader2 = torch.utils.data.DataLoader(
-            test_dataset2, sampler=test_sampler2,
-            batch_size=args.batch_size, shuffle=(test_sampler2 is None),
-            num_workers=args.workers, pin_memory=True)
 
     else:
         print("your dataset %s is not supported for finetuning now" % args.dataset)
@@ -569,8 +428,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.evaluate:
         validate(val_loader, model, criterion, args)
-        testing(test_loader, model, criterion, args)
-        testing2(test_loader2, model, criterion, args)
         return
     import datetime
     today = datetime.date.today()
@@ -593,20 +450,9 @@ def main_worker(gpu, ngpus_per_node, args):
             train_sampler.set_epoch(epoch)
         if args.sgdr == 0:
             adjust_learning_rate(optimizer, epoch, args)
-
-        # train for one epoch
-        # if args.final:
-        #    train2(train_loader, model, criterion, optimizer, epoch, args)
-        # else:
         train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler)
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
-        if abs(args.epochs - epoch) <= 20 and args.dataset == "ImageNet":
-            acc2 = testing(test_loader, model, criterion, args)
-            print("###Testing acc %.5f###" % acc2)
-        if abs(args.epochs - epoch) <= 10 and args.dataset == "Place205":
-            acc2 = testing(test_loader, model, criterion, args)
-            print("###Testing acc %.5f###" % acc2)
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
@@ -623,9 +469,6 @@ def main_worker(gpu, ngpus_per_node, args):
                 'optimizer': optimizer.state_dict(),
             }, is_best, filename=tmp_save_path)
 
-            if epoch == args.start_epoch and not args.use_swav:
-                sanity_check(model.state_dict(), args.pretrained)
-            
             if abs(args.epochs - epoch) <= 20:
                 tmp_save_path = os.path.join(log_path, 'model_%d.pth.tar' % epoch)
                 save_checkpoint({
@@ -666,32 +509,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler):
         # adjust_batch_learning_rate(optimizer, epoch, i, batch_total, args)
 
         if args.gpu is not None:
-            # if args.add_crop :
-            #     len_images = len(images)
-            #     for k in range(len(images)):
-            #         images[k] = images[k].cuda(args.gpu, non_blocking=True)
-            #
-            # else:
             images = images.cuda(args.gpu, non_blocking=True)
 
-        # if args.add_crop:
-        #     target = target.cuda(args.gpu, non_blocking=True)
-        #     len_images = len(images)
-        #     loss=0
-        #     first_output=-1
-        #
-        #     for k in range(len_images):
-        #         output=model(images[k])
-        #         loss += criterion(output, target)
-        #         if k==0:
-        #             first_output=output
-        #         if epoch == 0 and i == 0:
-        #             print("%d/%d loss values %.5f" %(k,len_images, loss.item()))
-        #     loss/=len_images
-        #     images = images[0]
-        #     output=first_output
-        # else:
-        #
         target = target.cuda(args.gpu, non_blocking=True)
 
         # compute output
@@ -796,39 +615,14 @@ def validate(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
-    # if args.dataset == "VOC2007":
-    #    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                     std=[0.229, 0.224, 0.225])
-    #    transformations_valid = transforms.Compose([
-    #        transforms.FiveCrop(224),
-    #    ])
-    # implement our own random crop
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
-            # print(images.size())
-            if args.gpu is not None and args.dataset != "VOC2007":
-                # if args.add_crop:
-                #     for k in range(len(images)):
-                #         images[k] = images[k].cuda(args.gpu, non_blocking=True)
-                # else:
-                images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
-            # if args.add_crop>1:
-            #     output_list=[]
-            #     for image in images:
-            #         output = model(image)
-            #         output_list.append(output)
-            #     output_list=torch.stack(output_list,dim=0)
-            #     output_list=torch.mean(output_list,dim=0)
-            #     output=output_list
-            #     images=images[0]
-            # else:
-            # compute output
             output = model(images)
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            acc1 = torch.mean(concat_all_gather(acc1), dim=0, keepdim=True)
-            acc5 = torch.mean(concat_all_gather(acc5), dim=0, keepdim=True)
+            acc1 = torch.mean(concat_all_gather(acc1.unsqueeze(0)), dim=0, keepdim=True)
+            acc5 = torch.mean(concat_all_gather(acc5.unsqueeze(0)), dim=0, keepdim=True)
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
             loss = criterion(output, target)
@@ -860,26 +654,12 @@ def testing(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
-    # if args.dataset == "VOC2007":
-    #    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                     std=[0.229, 0.224, 0.225])
-    #    transformations_valid = transforms.Compose([
-    #        transforms.FiveCrop(224),
-    #    ])
     correct_count = 0
     count_all = 0
     # implement our own random crop
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
-            # if args.dataset == "VOC2007":
-            #    images = transformations_valid(images)
-
-            # print(images.size())
-            if args.gpu is not None and args.dataset != "VOC2007":
-                for k in range(len(images)):
-                    images[k] = images[k].cuda(args.gpu, non_blocking=True)
-
             target = target.cuda(args.gpu, non_blocking=True)
             output_list = []
             for image in images:
@@ -891,8 +671,8 @@ def testing(val_loader, model, criterion, args):
             output = output_list
             images = images[0]
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            acc1 = torch.mean(concat_all_gather(acc1), dim=0, keepdim=True)
-            acc5 = torch.mean(concat_all_gather(acc5), dim=0, keepdim=True)
+            acc1 = torch.mean(concat_all_gather(acc1.unsqueeze(0)), dim=0, keepdim=True)
+            acc5 = torch.mean(concat_all_gather(acc5.unsqueeze(0)), dim=0, keepdim=True)
             correct_count += float(acc1[0]) * images.size(0)
             count_all += images.size(0)
             top1.update(acc1.item(), images.size(0))
@@ -926,26 +706,12 @@ def testing2(val_loader, model, criterion, args):
 
     # switch to evaluate mode
     model.eval()
-    # if args.dataset == "VOC2007":
-    #    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                     std=[0.229, 0.224, 0.225])
-    #    transformations_valid = transforms.Compose([
-    #        transforms.FiveCrop(224),
-    #    ])
     correct_count = 0
     count_all = 0
     # implement our own random crop
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
-            # if args.dataset == "VOC2007":
-            #    images = transformations_valid(images)
-
-            # print(images.size())
-            if args.gpu is not None and args.dataset != "VOC2007":
-                for k in range(len(images)):
-                    images[k] = images[k].cuda(args.gpu, non_blocking=True)
-
             target = target.cuda(args.gpu, non_blocking=True)
             output_list = []
             for image in images:
@@ -1098,11 +864,6 @@ def adjust_batch_learning_rate(optimizer, cur_epoch, cur_batch, batch_total, arg
                      init_lr - end_lr) + end_lr
     if cur_batch % 50 == 0:
         print("[%d] %d/%d learing rate %.9f" % (cur_epoch, cur_batch, batch_total, lr))
-    # if args.cos:
-    #    lr = 0.5 * (1. + math.cos(math.pi * epoch / args.epochs))*(lr-end_lr)+end_lr
-    # else:
-    #    for milestone in args.schedule:
-    #        lr *= 0.1 if epoch >= milestone else 1.
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
