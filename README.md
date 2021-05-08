@@ -238,11 +238,13 @@ python3 lincls.py --dataset=Place205 --sgdr=1 --data=./datasets/places205 --lr=5
 
 #### 4. Run training:
 ##### 4.1 Pascal detection
+Number of GPU will influence the overall batch size, thus all the experiments should be done with 8 GPUs. If with less GPUs, please finetune the SOLVER.BASE_LR based on your condition.
    ```
    cd detection
    python train_net.py --config-file configs/pascal_voc_R_50_C4_24k_adco.yaml --num-gpus 8 MODEL.WEIGHTS ./output.pkl
    ```
 ##### 4.2 COCO detection
+Number of GPU will influence the overall batch size, thus all the experiments should be done with 8 GPUs. If with less GPUs, please finetune the SOLVER.BASE_LR based on your condition.
 ```
    cd detection
    python train_net.py --config-file configs/coco_R_50_C4_2x_adco.yaml --num-gpus 8 MODEL.WEIGHTS ./output.pkl
