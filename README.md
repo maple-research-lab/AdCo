@@ -7,7 +7,7 @@
    <img src="https://img.shields.io/badge/licence-GNU-green">
 </a>   
 
-AdCo is a contrastive-learning based self-supervised learning methods. 
+AdCo is a contrastive-learning based self-supervised learning methods, which is published on [CVPR2021](https://openaccess.thecvf.com/content/CVPR2021/html/Hu_AdCo_Adversarial_Contrast_for_Efficient_Learning_of_Unsupervised_Representations_From_CVPR_2021_paper.html).
 
 Copyright (C) 2020 Qianjiang Hu*, Xiao Wang*, Wei Hu, Guo-Jun Qi
 
@@ -251,13 +251,14 @@ Number of GPU will influence the overall batch size, thus all the experiments sh
    ```
 
 ## Citation:
-[AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries](https://arxiv.org/pdf/2011.08435.pdf)
+[AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries](https://arxiv.org/pdf/2011.08435.pdf).  
 ```
-@article{hu2020adco,
-  title={AdCo: Adversarial Contrast for Efficient Learning of Unsupervised Representations from Self-Trained Negative Adversaries},
+@inproceedings{hu2021adco,
+  title={Adco: Adversarial contrast for efficient learning of unsupervised representations from self-trained negative adversaries},
   author={Hu, Qianjiang and Wang, Xiao and Hu, Wei and Qi, Guo-Jun},
-  journal={arXiv preprint arXiv:2011.08435},
-  year={2020}
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={1074--1083},
+  year={2021}
 }
 ```
 
